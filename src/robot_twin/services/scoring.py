@@ -25,6 +25,7 @@ class ScoreSummary:
     guards_up: int
     aborts: int  # strikes aborted mid-flight by the safety layer
     vetoes: int  # strikes rejected at launch by the safety layer
+    feints: int  # telegraphed but withdrawn; not delivered, not scored
     score: float
 
     @property
@@ -49,6 +50,7 @@ class Scorer:
         self._guards_up = 0
         self._aborts = 0
         self._vetoes = 0
+        self._feints = 0
         self._score = 0.0
 
     def record(
@@ -58,15 +60,17 @@ class Scorer:
         guard_up: bool | None,
         aborted: bool,
         vetoed: bool,
+        feinted: bool = False,
     ) -> None:
         """Record one drill episode.
 
         Args:
             dodged: Whether the trainee dodged, or None if the strike was never
-                delivered (vetoed or aborted).
+                delivered (vetoed, aborted or feinted).
             guard_up: Whether the guard was up at arrival, or None if not delivered.
             aborted: The strike was aborted mid-flight by the safety layer.
             vetoed: The strike was rejected at launch by the safety layer.
+            feinted: The strike was a feint, telegraphed but withdrawn.
         """
         self._episodes += 1
         if vetoed:
@@ -74,6 +78,9 @@ class Scorer:
             return
         if aborted:
             self._aborts += 1
+            return
+        if feinted:
+            self._feints += 1
             return
 
         self._resolved += 1
@@ -97,5 +104,6 @@ class Scorer:
             guards_up=self._guards_up,
             aborts=self._aborts,
             vetoes=self._vetoes,
+            feints=self._feints,
             score=self._score,
         )
