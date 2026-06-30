@@ -71,6 +71,24 @@ class TestPlantContract:
 
 
 @pytest.mark.mujoco
+class TestMultiArmPlant:
+    def test_plant_has_two_arms_and_accepts_both(self) -> None:
+        pytest.importorskip("mujoco")
+        if not SCENE_PATH.exists():
+            pytest.skip("scene model missing")
+        from robot_twin.hal.mujoco_plant import MujocoPlant
+
+        plant = MujocoPlant(SCENE_PATH)
+        assert plant.n_arms == 2
+        # Commanding either arm must not raise.
+        for arm_id in (0, 1):
+            plant.command_strike(
+                StrikeCommand(StrikeType.JAB, Vec3(0.0, 0.6, 1.0), 1.5, 0.2, arm_id)
+            )
+        plant.step(0.01)
+
+
+@pytest.mark.mujoco
 class TestSimObserverContract:
     def test_is_trainee_observer(self) -> None:
         pytest.importorskip("mujoco")
