@@ -70,7 +70,15 @@ class ScriptedTrainee:
         self._clock_s = 0.0
         self._reacting = True
         if self._policy is DodgePolicy.ALWAYS_DODGE:
-            self._target_offset = Vec3(self._cfg.dodge_sign * self._cfg.dodge_distance_m, 0.0, 0.0)
+            # Slip laterally AWAY from the incoming arm (target.x is the arm's
+            # plane), so each punch in a combo gets its own clean dodge.
+            if target.x > 0.0:
+                direction = -1.0
+            elif target.x < 0.0:
+                direction = 1.0
+            else:
+                direction = self._cfg.dodge_sign
+            self._target_offset = Vec3(direction * self._cfg.dodge_distance_m, 0.0, 0.0)
         elif self._policy is DodgePolicy.LUNGE:
             self._target_offset = self._cfg.lunge_offset
         else:  # NEVER_DODGE
