@@ -25,3 +25,10 @@ data/fight_clips/*
 runs/
 wandb/
 *.mp4
+
+# Rendered media artifacts (regenerate with the render scripts)
+renders/
+
+# Vendored / downloaded assets, fetched by scripts/fetch_g1.py (not committed)
+assets/unitree_g1/
+data/mocap/
