@@ -36,6 +36,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
+from robot_twin.core.geometry import point_to_segment_distance
 from robot_twin.core.result import ErrorCode, Result
 from robot_twin.core.types import (
     FloatArray,
@@ -44,6 +45,11 @@ from robot_twin.core.types import (
     TraineePose,
     Vec3,
 )
+
+# Re-exported for backward compatibility: callers and tests historically import
+# point_to_segment_distance from this module. The implementation now lives in
+# core.geometry so domain code can share it without depending on safety.
+__all__ = ["RobotGeometry", "SafetyArbiter", "SafetyConfig", "point_to_segment_distance"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -104,32 +110,6 @@ class RobotGeometry:
     @property
     def n_arms(self) -> int:
         return len(self.arm_bases)
-
-
-def point_to_segment_distance(p0: FloatArray, p1: FloatArray, points: FloatArray) -> FloatArray:
-    """Shortest distances from each of ``points`` to the segment ``p0``-``p1``.
-
-    Vectorised over ``points`` (shape ``(K, 3)``) because the arbiter checks all
-    protected keypoints in one shot on the hot path. Returns shape ``(K,)``.
-
-    Args:
-        p0: Segment start, shape ``(3,)``.
-        p1: Segment end, shape ``(3,)``.
-        points: Query points, shape ``(K, 3)``.
-
-    Returns:
-        Distance from each query point to the closest point on the segment.
-    """
-    seg = p1 - p0  # (3,)
-    seg_len2 = float(seg @ seg)
-    if seg_len2 == 0.0:
-        # Degenerate segment: distance to the single point p0.
-        return np.linalg.norm(points - p0, axis=1)
-    # Project each point onto the infinite line, clamp the parameter to [0, 1]
-    # so the closest point stays on the finite segment.
-    t = np.clip((points - p0) @ seg / seg_len2, 0.0, 1.0)  # (K,)
-    projection = p0 + t[:, None] * seg  # (K, 3)
-    return np.linalg.norm(points - projection, axis=1)
 
 
 @dataclass
