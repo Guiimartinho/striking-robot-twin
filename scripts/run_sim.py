@@ -91,11 +91,12 @@ def main() -> int:
     else:
         logger.warning("body shot vetoed unexpectedly: %s", body_result.message)
 
-    # 2. A shot aimed at the head: must be vetoed before any motion.
-    head_target = pose.keypoint(Keypoint.HEAD)
+    # 2. A high jab toward the jaw: within reach, but its line crosses the neck
+    # keep-out sphere, so it must be vetoed before any motion.
+    neck_target = pose.keypoint(Keypoint.NECK)
     head = StrikeCommand(
         strike_type=StrikeType.JAB,
-        target=head_target,
+        target=neck_target,
         speed_mps=2.0,
         telegraph_s=0.2,
         arm_id=0,

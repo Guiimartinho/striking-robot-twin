@@ -7,11 +7,15 @@
   The spring is the passive energy limiter AND the force sensor, exactly as on the
   real drive, so the control code above the HAL is born compatible.
 
-  Geometry is a reasonable Phase 0 default (CLAUDE.md section 11): tune later.
-  The arm base sits at (0, 0, 1.3) and punches along +y toward the trainee. -->
+  Geometry is a reasonable default (CLAUDE.md section 11): tune later. The arm
+  base sits at (0, 0, 1.0), body height, and punches along +y toward the trainee.
+  It is deliberately at body height, not head height: the 1-DOF arm moves only in
+  +y at a fixed z, so its whole reachable path must stay clear of the head/neck
+  keep-out. At z=1.0 that path is well below the head, so what the SafetyArbiter
+  approves matches what the arm actually executes. -->
 <mujoco model="striker_arm">
   <worldbody>
-    <body name="arm_base" pos="0 0 1.3">
+    <body name="arm_base" pos="0 0 1.0">
       <geom name="arm_mount" type="box" size="0.05 0.05 0.05" rgba="0.30 0.30 0.35 1" mass="2"/>
 
       <!-- Motor stage: position-controlled slide along the punch axis. -->

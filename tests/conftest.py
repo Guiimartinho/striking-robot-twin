@@ -111,7 +111,7 @@ def safety_config() -> SafetyConfig:
 
 @pytest.fixture
 def geometry() -> RobotGeometry:
-    return RobotGeometry(arm_bases=(Vec3(0.0, 0.0, 1.3),), reach_max_m=0.9)
+    return RobotGeometry(arm_bases=(Vec3(0.0, 0.0, 1.0),), reach_max_m=0.9)
 
 
 @pytest.fixture
@@ -143,10 +143,13 @@ def safe_command() -> StrikeCommand:
 
 @pytest.fixture
 def head_command() -> StrikeCommand:
-    """A command aimed straight at the head: must always be vetoed."""
+    """A high jab toward the jaw: within reach, but its line crosses the neck
+
+    keep-out sphere, so it must be vetoed for KEEPOUT (not reach).
+    """
     return StrikeCommand(
         strike_type=StrikeType.JAB,
-        target=Vec3(0.0, 0.75, 1.62),
+        target=Vec3(0.0, 0.75, 1.45),
         speed_mps=2.0,
         telegraph_s=0.2,
         arm_id=0,
