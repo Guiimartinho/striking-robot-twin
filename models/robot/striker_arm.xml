@@ -1,43 +1,63 @@
-<!-- Single-DOF Series Elastic striker arm (Phase 0 test arm).
+<!-- Two single-DOF Series Elastic striker arms (multi-striker, Phase 3).
 
-  Two stages in series, the essence of an SEA:
-    motor_y  : actuated slide, the BLDC + transmission position (commanded)
-    spring_y : passive slide with stiffness, the series spring (compliant)
-  The link force is sensed from spring deflection: F = jnt_stiffness * qpos(spring_y).
-  The spring is the passive energy limiter AND the force sensor, exactly as on the
-  real drive, so the control code above the HAL is born compatible.
+  Each arm is two stages in series, the essence of an SEA:
+    <armN>_motor  : actuated slide, the BLDC + transmission position (commanded)
+    <armN>_spring : passive slide with stiffness, the series spring (compliant)
+  Link force is sensed from spring deflection: F = jnt_stiffness * qpos(spring).
+  The spring is the passive energy limiter AND the force sensor, as on the real
+  drive, so the control code above the HAL is born compatible.
 
-  Geometry is a reasonable default (CLAUDE.md section 11): tune later. The arm
-  base sits at (0, 0, 1.0), body height, and punches along +y toward the trainee.
-  It is deliberately at body height, not head height: the 1-DOF arm moves only in
-  +y at a fixed z, so its whole reachable path must stay clear of the head/neck
-  keep-out. At z=1.0 that path is well below the head, so what the SafetyArbiter
-  approves matches what the arm actually executes. -->
-<mujoco model="striker_arm">
+  arm0 sits at x=-0.18, arm1 at x=+0.18, both at body height z=1.0, punching +y
+  toward the trainee. Body height (not head height) keeps each arm's whole
+  reachable path clear of the head/neck keep-out, so what the SafetyArbiter
+  approves matches what the arm executes. Geometry is a tunable default. -->
+<mujoco model="striker_arms">
+  <default>
+    <default class="motor_stage">
+      <joint type="slide" axis="0 1 0" range="0 0.8" damping="2.0"/>
+      <geom type="cylinder" size="0.03" rgba="0.40 0.40 0.45 1" mass="1.5"/>
+    </default>
+    <default class="spring_stage">
+      <joint type="slide" axis="0 1 0" range="-0.05 0.05" stiffness="3000" damping="20"
+             springref="0"/>
+      <geom type="capsule" size="0.035" rgba="0.50 0.50 0.55 1" mass="1.0"/>
+    </default>
+    <default class="glove">
+      <geom type="sphere" size="0.06" rgba="0.80 0.20 0.20 1" mass="0.4"
+            solref="0.02 1" solimp="0.9 0.95 0.001"/>
+    </default>
+  </default>
+
   <worldbody>
-    <body name="arm_base" pos="0 0 1.0">
-      <geom name="arm_mount" type="box" size="0.05 0.05 0.05" rgba="0.30 0.30 0.35 1" mass="2"/>
+    <!-- arm0 (left) -->
+    <body name="arm0_base" pos="-0.18 0 1.0">
+      <geom name="arm0_mount" type="box" size="0.05 0.05 0.05" rgba="0.30 0.30 0.35 1" mass="2"/>
+      <body name="arm0_motor" pos="0 0 0">
+        <joint name="arm0_motor" class="motor_stage"/>
+        <geom name="arm0_motor_geom" class="motor_stage" fromto="0 0 0 0 0.10 0"/>
+        <body name="arm0_forearm" pos="0 0.10 0">
+          <joint name="arm0_spring" class="spring_stage"/>
+          <geom name="arm0_forearm_geom" class="spring_stage" fromto="0 0 0 0 0.25 0"/>
+          <body name="arm0_glove" pos="0 0.25 0">
+            <geom name="arm0_glove_geom" class="glove"/>
+            <site name="arm0_glove_tip" pos="0 0.06 0" size="0.01" rgba="1 1 0 1"/>
+          </body>
+        </body>
+      </body>
+    </body>
 
-      <!-- Motor stage: position-controlled slide along the punch axis. -->
-      <body name="motor" pos="0 0 0">
-        <joint name="motor_y" type="slide" axis="0 1 0" range="0 0.8" damping="2.0"/>
-        <geom name="motor_geom" type="cylinder" fromto="0 0 0 0 0.10 0" size="0.03"
-              rgba="0.40 0.40 0.45 1" mass="1.5"/>
-
-        <!-- Series elastic stage: the spring between motor and link. Its
-             deflection (qpos) times stiffness is the sensed strike force. -->
-        <body name="forearm" pos="0 0.10 0">
-          <joint name="spring_y" type="slide" axis="0 1 0" range="-0.05 0.05"
-                 stiffness="3000" damping="20" springref="0"/>
-          <geom name="forearm_geom" type="capsule" fromto="0 0 0 0 0.25 0" size="0.035"
-                rgba="0.50 0.50 0.55 1" mass="1.0"/>
-
-          <!-- Padded glove. Soft contact (compliant solref) keeps impacts low
-               energy; on the real robot this is foam over the end effector. -->
-          <body name="glove" pos="0 0.25 0">
-            <geom name="glove_geom" type="sphere" size="0.06" rgba="0.80 0.20 0.20 1"
-                  mass="0.4" solref="0.02 1" solimp="0.9 0.95 0.001"/>
-            <site name="glove_tip" pos="0 0.06 0" size="0.01" rgba="1 1 0 1"/>
+    <!-- arm1 (right) -->
+    <body name="arm1_base" pos="0.18 0 1.0">
+      <geom name="arm1_mount" type="box" size="0.05 0.05 0.05" rgba="0.30 0.30 0.35 1" mass="2"/>
+      <body name="arm1_motor" pos="0 0 0">
+        <joint name="arm1_motor" class="motor_stage"/>
+        <geom name="arm1_motor_geom" class="motor_stage" fromto="0 0 0 0 0.10 0"/>
+        <body name="arm1_forearm" pos="0 0.10 0">
+          <joint name="arm1_spring" class="spring_stage"/>
+          <geom name="arm1_forearm_geom" class="spring_stage" fromto="0 0 0 0 0.25 0"/>
+          <body name="arm1_glove" pos="0 0.25 0">
+            <geom name="arm1_glove_geom" class="glove"/>
+            <site name="arm1_glove_tip" pos="0 0.06 0" size="0.01" rgba="1 1 0 1"/>
           </body>
         </body>
       </body>
@@ -45,12 +65,12 @@
   </worldbody>
 
   <actuator>
-    <!-- Commands the motor stage position. The series spring decouples this
-         from the contact force, which is the whole point of an SEA. -->
-    <position name="motor_y_act" joint="motor_y" kp="500" ctrlrange="0 0.8"/>
+    <position name="arm0_motor_act" joint="arm0_motor" kp="500" ctrlrange="0 0.8"/>
+    <position name="arm1_motor_act" joint="arm1_motor" kp="500" ctrlrange="0 0.8"/>
   </actuator>
 
   <sensor>
-    <jointpos name="spring_y_pos" joint="spring_y"/>
+    <jointpos name="arm0_spring_pos" joint="arm0_spring"/>
+    <jointpos name="arm1_spring_pos" joint="arm1_spring"/>
   </sensor>
 </mujoco>

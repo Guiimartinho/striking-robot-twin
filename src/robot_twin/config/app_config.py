@@ -58,7 +58,9 @@ class GeometrySettings(BaseModel):
     joint range (the mechanical end-stop), never beyond it.
     """
 
-    arm_bases: list[tuple[float, float, float]] = Field(default_factory=lambda: [(0.0, 0.0, 1.0)])
+    arm_bases: list[tuple[float, float, float]] = Field(
+        default_factory=lambda: [(-0.18, 0.0, 1.0), (0.18, 0.0, 1.0)]
+    )
     reach_max_m: float = 0.9
 
     def to_robot_geometry(self) -> RobotGeometry:
