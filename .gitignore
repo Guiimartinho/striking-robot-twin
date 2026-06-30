@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Virtual envs
+.venv/
+venv/
+
+# Build
+build/
+dist/
+
+# Tooling / OS
+.idea/
+.vscode/
+*.log
+
+# Project data and runs (keep small fixtures, not large media or logs)
+data/fight_clips/*
+!data/fight_clips/.gitkeep
+runs/
+wandb/
+*.mp4
