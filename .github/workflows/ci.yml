@@ -1,0 +1,44 @@
+name: CI
+
+# Lean and logical: only run on pull requests to main and pushes to main, and
+# skip docs-only changes. The pre-push hook already runs the suite locally, so
+# CI is the shared safety net, not a constant tax on every feature-branch push.
+on:
+  push:
+    branches: [main]
+    paths-ignore: ["**.md", "docs/**"]
+  pull_request:
+    branches: [main]
+    paths-ignore: ["**.md", "docs/**"]
+
+# Cancel a stale run when new commits land on the same ref: no wasted minutes.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install project and dev dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Lint (ruff)
+        run: ruff check .
+
+      - name: Format check (ruff)
+        run: ruff format --check .
+
+      - name: Tests (pytest, includes MuJoCo contract + fault injection)
+        run: pytest -q
