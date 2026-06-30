@@ -1,0 +1,28 @@
+<!-- Composed Phase 0 scene: floor + lighting, plus the striker arm and the
+  trainee mannequin pulled in by include. Compiler and option live here only,
+  so the included fragments stay free of global settings and merge cleanly.
+  Inspect with: simulate.exe models/scene.xml -->
+<mujoco model="boxing_twin_scene">
+  <compiler angle="radian" autolimits="true"/>
+  <option timestep="0.002" gravity="0 0 -9.81" integrator="implicitfast"/>
+
+  <visual>
+    <headlight diffuse="0.6 0.6 0.6" ambient="0.3 0.3 0.3" specular="0 0 0"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <global azimuth="120" elevation="-20"/>
+  </visual>
+
+  <asset>
+    <texture name="grid" type="2d" builtin="checker" rgb1="0.1 0.2 0.3" rgb2="0.2 0.3 0.4"
+             width="300" height="300"/>
+    <material name="grid" texture="grid" texrepeat="8 8" reflectance="0.2"/>
+  </asset>
+
+  <worldbody>
+    <light pos="0 0 3" dir="0 0 -1" directional="true"/>
+    <geom name="floor" type="plane" size="3 3 0.1" material="grid"/>
+  </worldbody>
+
+  <include file="robot/striker_arm.xml"/>
+  <include file="trainee/humanoid.xml"/>
+</mujoco>
