@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from typing import Protocol, runtime_checkable
 
-from robot_twin.core.types import JointState, StrikeCommand, TraineePose
+from robot_twin.core.types import JointState, StrikeCommand, TraineePose, Vec3
 
 
 @runtime_checkable
@@ -72,4 +72,31 @@ class ITraineeObserver(Protocol):
         Implementations should report an honest, current estimate, not a
         nominal constant, so the SafetyArbiter inflates the margin under load.
         """
+        ...
+
+
+@runtime_checkable
+class IOpponent(Protocol):
+    """The trainee's volition, as the drill loop interacts with it.
+
+    This is a SIM-ONLY concept. On the real robot the trainee is a human who
+    moves on their own and is merely observed through a camera; there is nothing
+    to drive, so the real opponent is passive (a no-op). In the sim a scripted
+    opponent models the student's dodging so the closed loop can be validated
+    end to end before any human is involved.
+    """
+
+    def react_to_strike(self, target: Vec3) -> None:
+        """Notify the opponent that a strike toward ``target`` has begun, so it
+
+        can start its reaction (a dodge) on subsequent advances.
+        """
+        ...
+
+    def advance(self, dt: float) -> None:
+        """Advance the opponent's own motion by ``dt`` seconds."""
+        ...
+
+    def reset(self) -> None:
+        """Return the opponent to its neutral stance, ready for a new rep."""
         ...
