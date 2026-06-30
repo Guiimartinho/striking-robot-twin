@@ -1,22 +1,28 @@
-"""Run the Phase 2 closed-loop drill on the MuJoCo twin.
+"""Run the full Phase 3 drill on the MuJoCo twin: the "run everything" demo.
 
-Wires the sim plant, a scripted trainee (observer + opponent) and the
-SafetyArbiter into the DrillEngine, then runs a short session and prints the
-outcomes and the score summary. Shows the loop end to end: telegraphed strikes,
-the trainee dodging, and the safety layer aborting a lunge.
+Wires the whole stack onto the sim twin and runs complete sessions:
+  - two SEA striker arms (multi-striker);
+  - a ComboGrammar sampling jab / jab-cross / jab-cross-hook ... combos;
+  - a Curriculum that ramps telegraph, speed and feints as the trainee improves;
+  - a scripted trainee (dodging, then lunging);
+  - the DodgeDetector / GuardDetector judging each strike;
+  - the SafetyArbiter gating every command, aborting any lunge.
 
-Note: the Phase 2 trainee is kinematic (the physical mannequin is static), so a
-dodge is modelled in the observed pose; physical glove contact with the static
-torso can still raise force and trip the safety abort, which is itself the safety
-layer working on the real plant. Physical trainee articulation is a later phase.
+Prints a per-session report. The dodging session should climb the curriculum and
+score; the lunging session should be aborted safely every time, with zero unsafe
+steps in both. Requires mujoco (pip install mujoco).
 
-Requires mujoco (pip install mujoco).
+Note: the Phase 2/3 trainee dodge is kinematic (the physical mannequin is
+static); strikes are non-contact feints, so the dodge plays out in the observed
+pose. Physical trainee articulation is a later phase.
 """
 
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
+import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
@@ -37,9 +43,11 @@ def main() -> int:
         logger.error("mujoco is not installed. Run: uv pip install mujoco")
         return 1
 
+    from robot_twin.domain.combo import ComboGrammar
     from robot_twin.hal.sim_trainee import DodgePolicy, ScriptedTrainee
     from robot_twin.safety.arbiter import SafetyArbiter
-    from robot_twin.services.drill_engine import DrillEngine
+    from robot_twin.services.curriculum import Curriculum
+    from robot_twin.services.drill_engine import DrillEngine, DrillSession
     from robot_twin.services.scoring import Scorer
 
     if not cfg.model_path.exists():
@@ -51,35 +59,38 @@ def main() -> int:
         geometry=cfg.geometry.to_robot_geometry(),
     )
 
-    # Two short sessions: a dodging trainee, then a lunging one to show the abort.
     for policy in (DodgePolicy.ALWAYS_DODGE, DodgePolicy.LUNGE):
         plant = MujocoPlant(cfg.model_path)
         observer = SimGTObserver(plant.model, plant.data, nominal_latency_s=cfg.nominal_latency_s)
         trainee = ScriptedTrainee(observer, policy=policy)
-        scorer = Scorer()
-        engine = DrillEngine(plant, trainee, trainee, arbiter, scorer)
+        engine = DrillEngine(plant, trainee, trainee, arbiter, Scorer())
+        session = DrillSession(engine, ComboGrammar(n_arms=plant.n_arms), Curriculum())
 
-        logger.info("=== session: trainee policy = %s ===", policy.value)
-        for i, outcome in enumerate(engine.run_session(5)):
-            logger.info(
-                "  ep %d: %s%s%s",
-                i,
-                outcome.state.value,
-                f", dodged={outcome.dodged}" if outcome.dodged is not None else "",
-                f", safety={outcome.safety_code.value}" if outcome.safety_code else "",
-            )
-        s = scorer.summary()
+        report = session.run(40, np.random.default_rng(7))
+        logger.info("=== session: trainee policy = %s (%d arms) ===", policy.value, plant.n_arms)
         logger.info(
-            "  summary: resolved=%d dodges=%d aborts=%d vetoes=%d dodge_rate=%.2f score=%.1f",
+            "  combos=%d final_level=%s total_unsafe_steps=%d aborts=%d",
+            report.combos,
+            report.final_level,
+            report.total_unsafe_steps,
+            report.aborts,
+        )
+        s = report.summary
+        logger.info(
+            "  delivered=%d dodges=%d hits=%d feints=%d vetoes=%d dodge_rate=%.2f score=%.1f",
             s.resolved,
             s.dodges,
-            s.aborts,
+            s.hits,
+            s.feints,
             s.vetoes,
             s.dodge_rate,
             s.score,
         )
+        if report.total_unsafe_steps != 0:
+            logger.error("  SAFETY FAILURE: %d unsafe steps", report.total_unsafe_steps)
+            return 2
 
-    logger.info("Phase 2 drill demo complete")
+    logger.info("Phase 3 drill demo complete: full stack ran, zero unsafe steps")
     return 0
 
 
