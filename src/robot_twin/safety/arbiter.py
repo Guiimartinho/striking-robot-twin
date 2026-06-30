@@ -187,9 +187,7 @@ class SafetyArbiter:
         """
         # 1. Command validity: the arm must exist on this frame.
         if not 0 <= cmd.arm_id < self.geometry.n_arms:
-            return Result.err(
-                ErrorCode.INVALID_COMMAND, f"unknown arm_id {cmd.arm_id}"
-            )
+            return Result.err(ErrorCode.INVALID_COMMAND, f"unknown arm_id {cmd.arm_id}")
 
         # 2. Latency ceiling: past this the pose is too stale to trust at all,
         # so no command can be proven safe. Reject before using the pose.

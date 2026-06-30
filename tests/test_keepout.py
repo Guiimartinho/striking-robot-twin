@@ -33,8 +33,8 @@ class TestKeepoutRadius:
     def test_monotonic_non_decreasing_in_latency(self) -> None:
         arb = SafetyArbiter(config=SafetyConfig(), geometry=_unit_geometry())
         latencies = np.linspace(0.0, 0.2, 21)
-        radii = [arb.compute_keepout_radius(float(l)) for l in latencies]
-        assert all(b >= a for a, b in zip(radii, radii[1:]))
+        radii = [arb.compute_keepout_radius(float(lat)) for lat in latencies]
+        assert all(b >= a for a, b in zip(radii, radii[1:], strict=False))
 
     def test_zero_velocity_bound_removes_latency_term(self) -> None:
         cfg = SafetyConfig(head_v_max_mps=0.0, tracking_error_m=0.05, margin_m=0.10)

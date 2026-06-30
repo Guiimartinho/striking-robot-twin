@@ -60,12 +60,12 @@ class Result(Generic[T]):
     message: str = ""
 
     @classmethod
-    def ok(cls, value: T) -> "Result[T]":
+    def ok(cls, value: T) -> Result[T]:
         """Wrap a successful value."""
         return cls(value=value, code=ErrorCode.OK, message="")
 
     @classmethod
-    def err(cls, code: ErrorCode, message: str = "") -> "Result[T]":
+    def err(cls, code: ErrorCode, message: str = "") -> Result[T]:
         """Wrap a failure. ``code`` must not be OK."""
         if code is ErrorCode.OK:
             raise ValueError("Result.err requires a non-OK code")

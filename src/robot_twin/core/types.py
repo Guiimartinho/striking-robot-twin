@@ -42,25 +42,25 @@ class Vec3:
         return np.array((self.x, self.y, self.z), dtype=np.float64)
 
     @classmethod
-    def from_array(cls, a: npt.ArrayLike) -> "Vec3":
+    def from_array(cls, a: npt.ArrayLike) -> Vec3:
         """Build a Vec3 from any 3-element array-like."""
         arr = np.asarray(a, dtype=np.float64).reshape(3)
         return cls(float(arr[0]), float(arr[1]), float(arr[2]))
 
-    def __add__(self, other: "Vec3") -> "Vec3":
+    def __add__(self, other: Vec3) -> Vec3:
         return Vec3(self.x + other.x, self.y + other.y, self.z + other.z)
 
-    def __sub__(self, other: "Vec3") -> "Vec3":
+    def __sub__(self, other: Vec3) -> Vec3:
         return Vec3(self.x - other.x, self.y - other.y, self.z - other.z)
 
-    def __mul__(self, scalar: float) -> "Vec3":
+    def __mul__(self, scalar: float) -> Vec3:
         return Vec3(self.x * scalar, self.y * scalar, self.z * scalar)
 
     def norm(self) -> float:
         """Euclidean length."""
         return float(np.sqrt(self.x * self.x + self.y * self.y + self.z * self.z))
 
-    def distance_to(self, other: "Vec3") -> float:
+    def distance_to(self, other: Vec3) -> float:
         """Euclidean distance to another point."""
         return (self - other).norm()
 
@@ -138,13 +138,9 @@ class TraineePose:
 
     def __post_init__(self) -> None:
         if self.positions.shape != (NUM_KEYPOINTS, 3):
-            raise ValueError(
-                f"positions must be ({NUM_KEYPOINTS}, 3), got {self.positions.shape}"
-            )
+            raise ValueError(f"positions must be ({NUM_KEYPOINTS}, 3), got {self.positions.shape}")
         if self.confidence.shape != (NUM_KEYPOINTS,):
-            raise ValueError(
-                f"confidence must be ({NUM_KEYPOINTS},), got {self.confidence.shape}"
-            )
+            raise ValueError(f"confidence must be ({NUM_KEYPOINTS},), got {self.confidence.shape}")
 
     def keypoint(self, kp: Keypoint) -> Vec3:
         """Position of a single keypoint as a Vec3."""

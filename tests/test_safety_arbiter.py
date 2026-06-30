@@ -14,8 +14,8 @@ All pure NumPy. No mujoco, no camera: the fault harness is the adversary.
 from __future__ import annotations
 
 import numpy as np
-import pytest
 
+from conftest import FixedObserver, make_pose
 from robot_twin.core.result import ErrorCode
 from robot_twin.core.types import (
     Keypoint,
@@ -26,7 +26,6 @@ from robot_twin.core.types import (
 )
 from robot_twin.safety.arbiter import (
     RobotGeometry,
-    SafetyArbiter,
     SafetyConfig,
     point_to_segment_distance,
 )
@@ -37,8 +36,6 @@ from robot_twin.safety.fault_injection import (
     NoiseFault,
 )
 
-from conftest import FixedObserver, make_pose
-
 
 # --------------------------------------------------------------------------- #
 # Explicit per-fault scenarios.
@@ -46,9 +43,7 @@ from conftest import FixedObserver, make_pose
 class TestLatencyFault:
     def test_over_ceiling_rejects_any_command(self, arbiter, observer, safe_command) -> None:
         faulted = LatencyFault(observer, extra_latency_s=0.5)  # well past the ceiling
-        result = arbiter.evaluate(
-            safe_command, faulted.get_pose(), faulted.latency_s()
-        )
+        result = arbiter.evaluate(safe_command, faulted.get_pose(), faulted.latency_s())
         assert result.code is ErrorCode.LATENCY_EXCEEDED
 
     def test_moderate_latency_inflates_and_rejects(self, arbiter, observer) -> None:
@@ -134,7 +129,11 @@ def _oracle_violates(
     if not np.all(np.isfinite(positions)) or np.any(confidence < config.min_confidence):
         return True
 
-    radius = config.tracking_error_m + (latency_s + config.actuator_stop_s) * config.head_v_max_mps + config.margin_m
+    radius = (
+        config.tracking_error_m
+        + (latency_s + config.actuator_stop_s) * config.head_v_max_mps
+        + config.margin_m
+    )
     distances = point_to_segment_distance(base, target, positions)
     if np.any(distances < radius):
         return True

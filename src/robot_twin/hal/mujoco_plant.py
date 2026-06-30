@@ -42,12 +42,11 @@ class MujocoPlant:
         self.model = mujoco.MjModel.from_xml_path(str(model_path))
         self.data = mujoco.MjData(self.model)
 
-        self._act_id = mujoco.mj_name2id(
-            self.model, mujoco.mjtObj.mjOBJ_ACTUATOR, motor_actuator
-        )
+        self._act_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_ACTUATOR, motor_actuator)
         if self._act_id < 0:
             raise RuntimeError(f"actuator '{motor_actuator}' not found in model")
-        self._ctrl_lo, self._ctrl_hi = (float(v) for v in self.model.actuator_ctrlrange[self._act_id])
+        ctrl_range = self.model.actuator_ctrlrange[self._act_id]
+        self._ctrl_lo, self._ctrl_hi = float(ctrl_range[0]), float(ctrl_range[1])
 
         base_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_BODY, "arm_base")
         if base_id < 0:

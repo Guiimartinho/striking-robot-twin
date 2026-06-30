@@ -19,10 +19,25 @@ dependencies = [
 # Heavy or platform-specific extras kept out of the default install.
 rl = ["stable-baselines3>=2.2"]
 viz = ["rerun-sdk>=0.15"]
-dev = ["pytest>=8.0"]
+dev = ["pytest>=8.0", "ruff>=0.4", "pre-commit>=3.5"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/robot_twin"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+# Pragmatic set: pyflakes (F), pycodestyle (E/W), import sorting (I),
+# pyupgrade (UP) and a few bugbear checks (B). Docstring rules (D) are left off
+# on purpose: the stubs intentionally carry only module-level docstrings.
+select = ["E", "F", "I", "W", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests favour readability over import hygiene and may keep long literal lines.
+"tests/*" = ["E501"]
 
 [tool.pytest.ini_options]
 # src layout: make robot_twin importable in tests without an editable install,

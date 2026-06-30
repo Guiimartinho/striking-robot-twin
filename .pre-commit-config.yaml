@@ -1,0 +1,35 @@
+# Local quality gates. Fast checks at commit time, the test suite at push time.
+# Install once with: pre-commit install --install-hooks
+# The rev pins match the ruff version in the dev extra so local runs and the
+# hook agree.
+default_install_hook_types: [pre-commit, pre-push]
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ["--maxkb=512"]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.8
+    hooks:
+      - id: ruff # lint, with autofix
+        args: [--fix]
+      - id: ruff-format # formatter
+
+  # Tests run only on push, not on every commit: fast inner loop, full safety
+  # net before anything leaves the machine. This is the local mirror of CI.
+  - repo: local
+    hooks:
+      - id: pytest
+        name: pytest (full suite)
+        entry: python -m pytest -q
+        language: system
+        pass_filenames: false
+        stages: [pre-push]

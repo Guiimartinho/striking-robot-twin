@@ -58,9 +58,7 @@ class GeometrySettings(BaseModel):
     joint range (the mechanical end-stop), never beyond it.
     """
 
-    arm_bases: list[tuple[float, float, float]] = Field(
-        default_factory=lambda: [(0.0, 0.0, 1.3)]
-    )
+    arm_bases: list[tuple[float, float, float]] = Field(default_factory=lambda: [(0.0, 0.0, 1.3)])
     reach_max_m: float = 0.9
 
     def to_robot_geometry(self) -> RobotGeometry:
@@ -79,7 +77,7 @@ class AppConfig(BaseModel):
     geometry: GeometrySettings = Field(default_factory=GeometrySettings)
 
     @classmethod
-    def from_yaml(cls, path: Path) -> "AppConfig":
+    def from_yaml(cls, path: Path) -> AppConfig:
         """Load and validate config from a YAML file."""
         import yaml  # local import: only this path needs PyYAML
 
@@ -88,7 +86,7 @@ class AppConfig(BaseModel):
         return cls.model_validate(raw)
 
     @classmethod
-    def load(cls) -> "AppConfig":
+    def load(cls) -> AppConfig:
         """Load from ``ROBOT_TWIN_CONFIG`` if set, else conservative defaults."""
         env_path = os.environ.get(_CONFIG_ENV_VAR)
         if env_path:

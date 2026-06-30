@@ -68,9 +68,7 @@ class DropoutFault:
         for kp in self.dropped:
             positions[int(kp)] = np.nan
             confidence[int(kp)] = 0.0
-        return TraineePose(
-            positions=positions, confidence=confidence, timestamp_s=pose.timestamp_s
-        )
+        return TraineePose(positions=positions, confidence=confidence, timestamp_s=pose.timestamp_s)
 
     def latency_s(self) -> float:
         return self.inner.latency_s()
